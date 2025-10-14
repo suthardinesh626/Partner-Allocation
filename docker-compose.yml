@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/rentkar
+      - MONGODB_DB=rentkar
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GPS_RATE_LIMIT=6
+      - GPS_RATE_LIMIT_WINDOW=60
+      - LOCK_EXPIRY_SECONDS=10
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - rentkar-network
+
+  mongo:
+    image: mongo:7
+    container_name: rentkar-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - rentkar-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rentkar-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - rentkar-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  rentkar-network:
+    driver: bridge
+

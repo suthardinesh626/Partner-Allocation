@@ -588,6 +588,35 @@ X-RateLimit-Reset: 45
 - [ ] Set up health checks
 - [ ] Configure rate limiting at API gateway level
 
+## ☁️ Vercel Deployment
+
+**⚠️ Important:** This app requires Redis and MongoDB. For Vercel deployment, you **must** use cloud services.
+
+### Quick Vercel Setup:
+
+1. **Set up Upstash Redis** (Required - Vercel can't use localhost)
+   - Sign up at [upstash.com](https://upstash.com)
+   - Create a Redis database
+   - Get your `REDIS_URL`
+
+2. **Configure Environment Variables in Vercel**
+   - Add all required variables (see Environment Variables section below)
+   - Use your **Upstash Redis URL** instead of `localhost:6379`
+   - Use your **MongoDB Atlas URI** (already configured)
+
+3. **Deploy**
+   - Push to GitHub
+   - Import project in Vercel
+   - Vercel will auto-detect Next.js and deploy
+
+📖 **For detailed step-by-step guide, see [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)**
+
+### Common Vercel Issues:
+
+- ❌ **Blank screen**: Missing environment variables
+- ❌ **Redis connection error**: Still using `localhost` instead of Upstash URL
+- ❌ **Build fails**: `output: 'standalone'` in next.config.ts (already fixed)
+
 ## 📝 Environment Variables
 
 ```env
