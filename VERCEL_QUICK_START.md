@@ -26,8 +26,8 @@ Add these 8 variables:
 
 | Variable | Value |
 |----------|-------|
-| `MONGODB_URI` | `mongodb+srv://suthardinesh626_db_user:KFxsJSiXD9MNIIb2@partnerbooking.fm0az7r.mongodb.net` |
-| `MONGODB_DB` | `partnerBooking` |
+| `MONGODB_URI` | `mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/?retryWrites=true&w=majority` ⚠️ Use your actual MongoDB URI |
+| `MONGODB_DB` | `your-database-name` |
 | `REDIS_URL` | `redis://default:YOUR_PASSWORD@YOUR_REGION.upstash.io:6379` ⚠️ From Upstash |
 | `REDIS_HOST` | `YOUR_REGION.upstash.io` ⚠️ From Upstash |
 | `REDIS_PORT` | `6379` |
@@ -107,6 +107,43 @@ If deployment still doesn't work:
 - [ ] Did you click "Redeploy" after adding variables?
 - [ ] Did you check Runtime Logs for errors?
 - [ ] Is MongoDB Atlas Network Access set to `0.0.0.0/0`?
+- [ ] Does your `MONGODB_URI` include `?retryWrites=true&w=majority` at the end?
+
+## 🔧 Common Error Fixes
+
+### SSL/TLS Error (error:0A000438)
+```
+Error: SSL routines:ssl3_read_bytes:tlsv1 alert internal error
+```
+
+**Cause:** MongoDB Atlas TLS/SSL connection issue
+
+**Fix:**
+1. ✅ Make sure your MongoDB URI ends with: `/?retryWrites=true&w=majority`
+2. ✅ In MongoDB Atlas: Network Access → Add `0.0.0.0/0` (allow all IPs)
+3. ✅ The code fix is already applied in `lib/mongo.ts` (TLS options added)
+4. ✅ Redeploy after updating the environment variable
+
+**Correct MongoDB URI format:**
+```
+mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+```
+
+### Password Special Characters Issue
+
+If your MongoDB password has special characters (`@`, `!`, `#`, `%`, etc.), you must URL-encode them:
+
+| Character | Encoded |
+|-----------|---------|
+| `@` | `%40` |
+| `!` | `%21` |
+| `#` | `%23` |
+| `$` | `%24` |
+| `%` | `%25` |
+
+Example:
+- Original: `mongodb+srv://user:P@ssw0rd!@cluster.mongodb.net`
+- Fixed: `mongodb+srv://user:P%40ssw0rd%21@cluster.mongodb.net/?retryWrites=true&w=majority`
 
 ---
 

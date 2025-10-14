@@ -6,10 +6,15 @@ This guide walks you through deploying the Rentkar app to Vercel.
 
 Before deploying to Vercel, you need to set up cloud services because Vercel is serverless (no local Redis/MongoDB):
 
-### 1. MongoDB Atlas (Already Set Up ✅)
-You're already using MongoDB Atlas, so this is done!
-- Your connection string: `mongodb+srv://suthardinesh626_db_user:KFxsJSiXD9MNIIb2@partnerbooking.fm0az7r.mongodb.net`
-- Database name: `partnerBooking`
+### 1. MongoDB Atlas (Required)
+You need a MongoDB Atlas account with a cluster set up.
+
+If you don't have one:
+1. Go to [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+2. Sign up for free tier
+3. Create a cluster
+4. Create a database user
+5. Get your connection string: `mongodb+srv://username:password@cluster.mongodb.net`
 
 ### 2. Redis Cloud Setup (REQUIRED ⚠️)
 Vercel cannot use `localhost:6379`. You need a cloud Redis instance.
@@ -85,11 +90,11 @@ In Vercel dashboard:
 
 ```
 Name: MONGODB_URI
-Value: mongodb+srv://suthardinesh626_db_user:KFxsJSiXD9MNIIb2@partnerbooking.fm0az7r.mongodb.net
+Value: mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/?retryWrites=true&w=majority
 Environment: Production, Preview, Development
 
 Name: MONGODB_DB
-Value: partnerBooking
+Value: your-database-name
 Environment: Production, Preview, Development
 
 Name: REDIS_URL
@@ -98,6 +103,8 @@ Environment: Production, Preview, Development
 
 ... (repeat for all variables)
 ```
+
+**⚠️ IMPORTANT:** Replace the placeholder values with your actual credentials.
 
 ### Step 4: Redeploy
 

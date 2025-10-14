@@ -47,6 +47,11 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
       minPoolSize: 2,
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
+      // SSL/TLS options for MongoDB Atlas (required for Vercel)
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      retryWrites: true,
+      w: 'majority' as const,
     };
 
     cached.promise = MongoClient.connect(uri, opts);
