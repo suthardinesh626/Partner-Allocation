@@ -1,6 +1,6 @@
 # API Examples & Testing
 
-This document provides ready-to-use API examples for testing the Rentkar system.
+This document provides ready-to-use API examples for testing the Partner-Allocation system.
 
 ## Prerequisites
 
@@ -377,7 +377,7 @@ TTL lock:booking:assign:$BOOKING_ID
 
 ```bash
 # Connect to MongoDB
-mongosh mongodb://localhost:27017/rentkar
+mongosh mongodb://localhost:27017/partner-allocation
 
 # View bookings
 db.bookings.find().pretty()

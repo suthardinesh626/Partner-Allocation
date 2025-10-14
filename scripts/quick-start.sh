@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Quick start script for Rentkar application
+# Quick start script for Partner-Allocation application
 
-echo "🚀 Rentkar Quick Start Script"
+echo "🚀 Partner-Allocation Quick Start Script"
 echo "=============================="
 echo ""
 
@@ -54,7 +54,7 @@ echo "⏳ Waiting for services to be ready..."
 # Wait for MongoDB
 echo -n "  MongoDB: "
 for i in {1..30}; do
-    if docker exec rentkar-mongo mongosh --eval "db.adminCommand('ping')" &> /dev/null; then
+    if docker exec partner-allocation-mongo mongosh --eval "db.adminCommand('ping')" &> /dev/null; then
         echo -e "${GREEN}✓ Ready${NC}"
         break
     fi
@@ -68,7 +68,7 @@ done
 # Wait for Redis
 echo -n "  Redis: "
 for i in {1..30}; do
-    if docker exec rentkar-redis redis-cli ping &> /dev/null; then
+    if docker exec partner-allocation-redis redis-cli ping &> /dev/null; then
         echo -e "${GREEN}✓ Ready${NC}"
         break
     fi
@@ -105,11 +105,11 @@ fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -e "${GREEN}✅ Rentkar is now running!${NC}"
+echo -e "${GREEN}✅ Partner-Allocation is now running!${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📍 Application:  http://localhost:3000"
-echo "📍 MongoDB:      mongodb://localhost:27017/rentkar"
+echo "📍 MongoDB:      mongodb://localhost:27017/partner-allocation"
 echo "📍 Redis:        redis://localhost:6379"
 echo ""
 echo "📊 Sample Data:"

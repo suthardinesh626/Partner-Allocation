@@ -6,8 +6,8 @@
 
 1. **Start MongoDB and Redis using Docker**:
    ```bash
-   docker run -d -p 27017:27017 --name rentkar-mongo mongo:7
-   docker run -d -p 6379:6379 --name rentkar-redis redis:7-alpine
+   docker run -d -p 27017:27017 --name partner-allocation-mongo mongo:7
+   docker run -d -p 6379:6379 --name partner-allocation-redis redis:7-alpine
    ```
 
 2. **Install dependencies**:
@@ -131,7 +131,7 @@ done
 
 ```bash
 # Connect to MongoDB
-mongosh mongodb://localhost:27017/rentkar
+mongosh mongodb://localhost:27017/partner-allocation
 
 # View bookings
 db.bookings.find().pretty()
@@ -252,7 +252,7 @@ PORT=3001 npm run dev
 docker ps | grep mongo
 
 # Restart MongoDB
-docker restart rentkar-mongo
+docker restart partner-allocation-mongo
 ```
 
 ### Redis Connection Error
@@ -262,7 +262,7 @@ docker restart rentkar-mongo
 docker ps | grep redis
 
 # Restart Redis
-docker restart rentkar-redis
+docker restart partner-allocation-redis
 ```
 
 ### Clear All Data and Start Fresh

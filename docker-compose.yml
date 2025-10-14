@@ -8,8 +8,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/rentkar
-      - MONGODB_DB=rentkar
+      - MONGODB_URI=mongodb://mongo:27017/partner-allocation
+      - MONGODB_DB=partner-allocation
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -20,18 +20,18 @@ services:
       - mongo
       - redis
     networks:
-      - rentkar-network
+      - partner-allocation-network
 
   mongo:
     image: mongo:7
-    container_name: rentkar-mongo
+    container_name: partner-allocation-mongo
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
       - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
-      - rentkar-network
+      - partner-allocation-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -40,13 +40,13 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: rentkar-redis
+    container_name: partner-allocation-redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
-      - rentkar-network
+      - partner-allocation-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -58,6 +58,6 @@ volumes:
   redis-data:
 
 networks:
-  rentkar-network:
+  partner-allocation-network:
     driver: bridge
 

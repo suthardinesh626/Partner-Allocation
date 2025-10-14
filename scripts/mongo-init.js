@@ -1,7 +1,7 @@
 // MongoDB initialization script for Docker
 // This script runs when the MongoDB container is first created
 
-db = db.getSiblingDB('rentkar');
+db = db.getSiblingDB('partner-allocation');
 
 // Create collections
 db.createCollection('bookings');

@@ -1,6 +1,6 @@
 # Vercel Deployment Guide
 
-This guide walks you through deploying the Rentkar app to Vercel.
+This guide walks you through deploying the Partner-Allocation app to Vercel.
 
 ## Prerequisites
 
@@ -212,7 +212,7 @@ curl https://your-app.vercel.app/api/bookings
 ### 4. Test the UI
 
 Visit `https://your-app.vercel.app`
-- Should see "Rentkar Dashboard"
+- Should see "Partner-Allocation Dashboard"
 - Bookings should load
 - Partners should load
 - No errors in browser console

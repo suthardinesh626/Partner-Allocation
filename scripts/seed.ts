@@ -33,7 +33,7 @@ function generatePartners(): Partner[] {
     for (let i = 0; i < 5; i++) {
       const partner: Partner = {
         name: `${city.name} Partner ${i + 1}`,
-        email: `partner${cityIndex * 5 + i + 1}@rentkar.com`,
+        email: `partner${cityIndex * 5 + i + 1}@partner-allocation.com`,
         phone: `+91${9000000000 + cityIndex * 5 + i}`,
         city: city.name,
         location: {

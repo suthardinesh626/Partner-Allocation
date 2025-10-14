@@ -1,10 +1,10 @@
-# Getting Started with Rentkar
+# Getting Started with Partner-Allocation
 
-Welcome to the Rentkar Booking & Partner Verification System! This guide will help you get up and running in less than 5 minutes.
+Welcome to the Partner-Allocation Booking & Partner Verification System! This guide will help you get up and running in less than 5 minutes.
 
-## 🎯 What is Rentkar?
+## 🎯 What is Partner-Allocation?
 
-Rentkar is a full-stack booking and partner verification system that demonstrates:
+Partner-Allocation is a full-stack booking and partner verification system that demonstrates:
 - **Distributed Systems**: Redis locks for concurrency control
 - **Geospatial Queries**: Find nearest partners using MongoDB
 - **Rate Limiting**: Prevent API abuse with Redis
@@ -170,7 +170,7 @@ This tests:
 ### File Structure
 
 ```
-rentkar-app/
+partner-allocation-app/
 ├── lib/              # Core utilities
 │   ├── mongo.ts      # Database connection
 │   ├── redis.ts      # Cache & pub/sub

@@ -1,4 +1,4 @@
-# Rentkar Assignment - Project Summary
+# Partner-Allocation Assignment - Project Summary
 
 ## ✅ Completed Features
 
@@ -264,8 +264,8 @@ done
 
 ```env
 # Required
-MONGODB_URI=mongodb://localhost:27017/rentkar
-MONGODB_DB=rentkar
+MONGODB_URI=mongodb://localhost:27017/partner-allocation
+MONGODB_DB=partner-allocation
 REDIS_URL=redis://localhost:6379
 
 # Optional (with defaults)
@@ -352,5 +352,5 @@ For questions or issues:
 **Developer**: Dinesh Suthar  
 **Date**: October 2025  
 **Tech Stack**: Next.js + MongoDB + Redis + Docker  
-**Purpose**: Rentkar Developer Assignment
+**Purpose**: Partner-Allocation Developer Assignment
 

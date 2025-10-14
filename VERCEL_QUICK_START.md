@@ -91,7 +91,7 @@ Should return JSON with bookings
 https://your-app.vercel.app
 ```
 Should show:
-- ✅ Rentkar Dashboard header
+- ✅ Partner-Allocation Dashboard header
 - ✅ Bookings list
 - ✅ Partners list
 - ✅ No console errors

@@ -67,7 +67,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Rentkar Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Partner-Allocation Dashboard</h1>
               <p className="text-sm text-gray-600 mt-1">
                 Booking & Partner Verification System
               </p>
@@ -165,7 +165,7 @@ export default function Home() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-gray-600">
-            Rentkar Assignment - Full-Stack Booking & Verification System
+           Suthar Dinesh - Partner Booking & Verification System
           </p>
         </div>
       </footer>

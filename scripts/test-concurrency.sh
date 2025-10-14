@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Test concurrency control for Rentkar system
+# Test concurrency control for Partner-Allocation system
 
-echo "🧪 Testing Rentkar Concurrency Control"
+echo "🧪 Testing Partner-Allocation Concurrency Control"
 echo "======================================="
 echo ""
 

@@ -1,4 +1,4 @@
-# Rentkar Booking & Partner Verification System
+# Partner-Allocation Booking & Partner Verification System
 
 A full-stack booking and partner verification system built with Next.js, MongoDB, Redis, and Docker. This system handles concurrent operations safely using distributed locks, implements rate limiting for GPS updates, and provides real-time updates using Redis pub/sub.
 
@@ -47,7 +47,7 @@ A full-stack booking and partner verification system built with Next.js, MongoDB
 ## 📁 Project Structure
 
 ```
-rentkar-app/
+partner-allocation-app/
 ├── app/
 │   ├── page.tsx                    # Main dashboard UI
 │   ├── globals.css                 # Global styles
@@ -91,7 +91,7 @@ rentkar-app/
 
 1. **Clone the repository**
    ```bash
-   cd rentkar-app
+   cd partner-allocation-app
    ```
 
 2. **Install dependencies**
@@ -106,8 +106,8 @@ rentkar-app/
    
    Update `.env` with your configuration:
    ```env
-   MONGODB_URI=mongodb://localhost:27017/rentkar
-   MONGODB_DB=rentkar
+   MONGODB_URI=mongodb://localhost:27017/partner-allocation
+   MONGODB_DB=partner-allocation
    REDIS_URL=redis://localhost:6379
    ```
 
@@ -621,8 +621,8 @@ X-RateLimit-Reset: 45
 
 ```env
 # MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/rentkar
-MONGODB_DB=rentkar
+MONGODB_URI=mongodb://localhost:27017/partner-allocation
+MONGODB_DB=partner-allocation
 
 # Redis Configuration
 REDIS_HOST=localhost
@@ -649,10 +649,10 @@ LOCK_EXPIRY_SECONDS=10
 docker ps | grep mongo
 
 # Check MongoDB logs
-docker logs rentkar-mongo
+docker logs partner-allocation-mongo
 
 # Test connection
-mongosh mongodb://localhost:27017/rentkar
+mongosh mongodb://localhost:27017/partner-allocation
 ```
 
 ### Redis Connection Issues
@@ -661,7 +661,7 @@ mongosh mongodb://localhost:27017/rentkar
 docker ps | grep redis
 
 # Check Redis logs
-docker logs rentkar-redis
+docker logs partner-allocation-redis
 
 # Test connection
 redis-cli ping
@@ -670,7 +670,7 @@ redis-cli ping
 ### Application Issues
 ```bash
 # Check application logs
-docker logs rentkar-app-1
+docker logs partner-allocation-app-1
 
 # Restart all services
 docker-compose restart
