@@ -7,19 +7,14 @@ import { getRedisClient } from './redis';
  * @returns true if lock acquired, false otherwise
  */
 export async function acquireLock(key: string, expirySeconds: number = 10): Promise<boolean> {
-  try {
-    const redis = await getRedisClient();
-    
-    // SET key value NX EX seconds
-    // NX: Only set if key doesn't exist
-    // EX: Set expiry time in seconds
-    const result = await redis.set(key, 'locked', 'EX', expirySeconds, 'NX');
-    
-    return result === 'OK';
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable for locking. Proceeding without distributed lock.');
-    return true; // Allow operation to proceed
-  }
+  const redis = await getRedisClient();
+  
+  // SET key value NX EX seconds
+  // NX: Only set if key doesn't exist
+  // EX: Set expiry time in seconds
+  const result = await redis.set(key, 'locked', 'EX', expirySeconds, 'NX');
+  
+  return result === 'OK';
 }
 
 /**
@@ -27,13 +22,8 @@ export async function acquireLock(key: string, expirySeconds: number = 10): Prom
  * @param key - The lock key
  */
 export async function releaseLock(key: string): Promise<void> {
-  try {
-    const redis = await getRedisClient();
-    await redis.del(key);
-  } catch (error) {
-    // Silently fail if Redis is unavailable
-    console.warn('⚠️ Redis unavailable for releasing lock. Skipping.');
-  }
+  const redis = await getRedisClient();
+  await redis.del(key);
 }
 
 /**
@@ -68,14 +58,9 @@ export async function withLock<T>(
  * @returns true if lock exists, false otherwise
  */
 export async function isLocked(key: string): Promise<boolean> {
-  try {
-    const redis = await getRedisClient();
-    const exists = await redis.exists(key);
-    return exists === 1;
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable for checking lock. Assuming unlocked.');
-    return false; // Assume unlocked if Redis unavailable
-  }
+  const redis = await getRedisClient();
+  const exists = await redis.exists(key);
+  return exists === 1;
 }
 
 // Lock key prefixes

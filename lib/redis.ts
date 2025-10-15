@@ -1,15 +1,16 @@
 import Redis from 'ioredis';
 
-const hasRedisUrl = !!process.env.REDIS_URL;
-
-if (!hasRedisUrl) {
-  console.warn('⚠️ REDIS_URL not defined. Redis features (locking, rate limiting, pub/sub) will be disabled.');
+if (!process.env.REDIS_URL) {
+  throw new Error(
+    '❌ REDIS_URL is required! Please set it in your environment.\n' +
+    'For local: Use docker-compose up (Redis included)\n' +
+    'For Vercel: Add Upstash Redis URL to environment variables'
+  );
 }
 
 interface RedisClientCached {
   client: Redis | null;
   promise: Promise<Redis> | null;
-  failed: boolean; // Track if connection failed
 }
 
 // Use global variable to preserve connection across hot reloads in development
@@ -21,7 +22,6 @@ declare global {
 let cached: RedisClientCached = global._redisClientPromise || {
   client: null,
   promise: null,
-  failed: !hasRedisUrl, // Mark as failed if no REDIS_URL
 };
 
 if (!global._redisClientPromise) {
@@ -32,15 +32,6 @@ if (!global._redisClientPromise) {
  * Get Redis client instance (singleton pattern)
  */
 export async function getRedisClient(): Promise<Redis> {
-  if (!process.env.REDIS_URL) {
-    throw new Error('Redis URL not configured');
-  }
-
-  // If previously failed, fail fast without retry
-  if (cached.failed) {
-    throw new Error('Redis previously failed to connect');
-  }
-
   if (cached.client) {
     return cached.client;
   }
@@ -48,22 +39,8 @@ export async function getRedisClient(): Promise<Redis> {
   if (!cached.promise) {
     cached.promise = new Promise((resolve, reject) => {
       const client = new Redis(process.env.REDIS_URL as string, {
-        maxRetriesPerRequest: 1, // Reduced from 3 to 1
-        connectTimeout: 2000, // 2 second connection timeout
-        retryStrategy: (times) => {
-          // Only retry once
-          if (times > 1) {
-            return null; // Stop retrying
-          }
-          return 100; // Quick retry
-        },
-        reconnectOnError: (err) => {
-          const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
-          if (targetErrors.some((targetError) => err.message.includes(targetError))) {
-            return true;
-          }
-          return false;
-        },
+        maxRetriesPerRequest: 3,
+        lazyConnect: true, // Don't connect immediately
       });
 
       client.on('connect', () => {
@@ -72,32 +49,20 @@ export async function getRedisClient(): Promise<Redis> {
 
       client.on('error', (err) => {
         console.error('❌ Redis error:', err.message);
+        reject(err);
       });
 
       client.on('ready', () => {
-        cached.failed = false;
         resolve(client);
       });
 
-      // Reduced timeout from 10s to 2s
-      setTimeout(() => {
-        if (!cached.client) {
-          cached.failed = true; // Mark as failed
-          reject(new Error('Redis connection timeout after 2 seconds'));
-        }
-      }, 2000);
+      // Manually connect
+      client.connect().catch(reject);
     });
   }
 
-  try {
-    cached.client = await cached.promise;
-    return cached.client;
-  } catch (error) {
-    cached.promise = null;
-    cached.failed = true; // Mark as failed to prevent future attempts
-    console.warn('⚠️ Redis unavailable. Continuing without Redis.');
-    throw error;
-  }
+  cached.client = await cached.promise;
+  return cached.client;
 }
 
 /**

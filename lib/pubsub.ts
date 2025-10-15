@@ -10,48 +10,32 @@ import type {
  * Publish a booking confirmed event
  */
 export async function publishBookingConfirmed(event: BookingConfirmedEvent): Promise<void> {
-  try {
-    const redis = await getRedisClient();
-    await redis.publish(REDIS_CHANNELS.BOOKING_CONFIRMED, JSON.stringify(event));
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable. Event not published:', REDIS_CHANNELS.BOOKING_CONFIRMED);
-  }
+  const redis = await getRedisClient();
+  await redis.publish(REDIS_CHANNELS.BOOKING_CONFIRMED, JSON.stringify(event));
 }
 
 /**
  * Publish a partner GPS update event
  */
 export async function publishPartnerGPSUpdate(event: PartnerGPSUpdateEvent): Promise<void> {
-  try {
-    const redis = await getRedisClient();
-    await redis.publish(REDIS_CHANNELS.PARTNER_GPS_UPDATE, JSON.stringify(event));
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable. Event not published:', REDIS_CHANNELS.PARTNER_GPS_UPDATE);
-  }
+  const redis = await getRedisClient();
+  await redis.publish(REDIS_CHANNELS.PARTNER_GPS_UPDATE, JSON.stringify(event));
 }
 
 /**
  * Publish a booking assigned event
  */
 export async function publishBookingAssigned(event: BookingAssignedEvent): Promise<void> {
-  try {
-    const redis = await getRedisClient();
-    await redis.publish(REDIS_CHANNELS.BOOKING_ASSIGNED, JSON.stringify(event));
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable. Event not published:', REDIS_CHANNELS.BOOKING_ASSIGNED);
-  }
+  const redis = await getRedisClient();
+  await redis.publish(REDIS_CHANNELS.BOOKING_ASSIGNED, JSON.stringify(event));
 }
 
 /**
  * Publish a document reviewed event
  */
 export async function publishDocumentReviewed(event: DocumentReviewedEvent): Promise<void> {
-  try {
-    const redis = await getRedisClient();
-    await redis.publish(REDIS_CHANNELS.DOCUMENT_REVIEWED, JSON.stringify(event));
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable. Event not published:', REDIS_CHANNELS.DOCUMENT_REVIEWED);
-  }
+  const redis = await getRedisClient();
+  await redis.publish(REDIS_CHANNELS.DOCUMENT_REVIEWED, JSON.stringify(event));
 }
 
 /**

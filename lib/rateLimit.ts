@@ -12,52 +12,43 @@ export async function rateLimit(
   limit: number,
   windowSeconds: number
 ): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
-  try {
-    const redis = await getRedisClient();
-    const now = Date.now();
-    const windowStart = now - windowSeconds * 1000;
-    // Use a Redis pipeline for atomic operations
-    const pipeline = redis.pipeline();
-    
-    // Remove old entries outside the time window
-    pipeline.zremrangebyscore(key, 0, windowStart);
-    
-    // Count current requests in the window
-    pipeline.zcard(key);
-    
-    // Add current request
-    pipeline.zadd(key, now, `${now}`);
-    
-    // Set expiry on the key
-    pipeline.expire(key, windowSeconds);
-    
-    const results = await pipeline.exec();
-    
-    if (!results) {
-      throw new Error('Redis pipeline execution failed');
-    }
+  const redis = await getRedisClient();
+  const now = Date.now();
+  const windowStart = now - windowSeconds * 1000;
 
-    // Get the count after removing old entries
-    const count = results[1][1] as number;
-    
-    const allowed = count < limit;
-    const remaining = Math.max(0, limit - count - 1);
-    const resetIn = windowSeconds;
-
-    return {
-      allowed,
-      remaining,
-      resetIn,
-    };
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable for rate limiting. Allowing request.');
-    // Fail open - allow the request if rate limiting fails
-    return {
-      allowed: true,
-      remaining: limit,
-      resetIn: windowSeconds,
-    };
+  // Use a Redis pipeline for atomic operations
+  const pipeline = redis.pipeline();
+  
+  // Remove old entries outside the time window
+  pipeline.zremrangebyscore(key, 0, windowStart);
+  
+  // Count current requests in the window
+  pipeline.zcard(key);
+  
+  // Add current request
+  pipeline.zadd(key, now, `${now}`);
+  
+  // Set expiry on the key
+  pipeline.expire(key, windowSeconds);
+  
+  const results = await pipeline.exec();
+  
+  if (!results) {
+    throw new Error('Redis pipeline execution failed');
   }
+
+  // Get the count after removing old entries
+  const count = results[1][1] as number;
+  
+  const allowed = count < limit;
+  const remaining = Math.max(0, limit - count - 1);
+  const resetIn = windowSeconds;
+
+  return {
+    allowed,
+    remaining,
+    resetIn,
+  };
 }
 
 /**
@@ -72,28 +63,20 @@ export async function getRateLimitStatus(
   limit: number,
   windowSeconds: number
 ): Promise<{ count: number; remaining: number; resetIn: number }> {
-  try {
-    const redis = await getRedisClient();
-    const now = Date.now();
-    const windowStart = now - windowSeconds * 1000;
-    const count = await redis.zcount(key, windowStart, now);
-    const remaining = Math.max(0, limit - count);
-    const ttl = await redis.ttl(key);
-    const resetIn = ttl > 0 ? ttl : windowSeconds;
+  const redis = await getRedisClient();
+  const now = Date.now();
+  const windowStart = now - windowSeconds * 1000;
+  
+  const count = await redis.zcount(key, windowStart, now);
+  const remaining = Math.max(0, limit - count);
+  const ttl = await redis.ttl(key);
+  const resetIn = ttl > 0 ? ttl : windowSeconds;
 
-    return {
-      count,
-      remaining,
-      resetIn,
-    };
-  } catch (error) {
-    console.warn('⚠️ Redis unavailable for getting rate limit status.');
-    return {
-      count: 0,
-      remaining: limit,
-      resetIn: windowSeconds,
-    };
-  }
+  return {
+    count,
+    remaining,
+    resetIn,
+  };
 }
 
 // Rate limit key prefixes
