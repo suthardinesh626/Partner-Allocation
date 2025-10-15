@@ -143,7 +143,7 @@ export default function PartnerCard({ partner, onRefresh, onNavigateToBooking, i
           <p className="text-sm text-green-800">{success}</p>
         </div>
       )}
-    </div>
+    </div>    
   );
 }
 
