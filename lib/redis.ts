@@ -40,7 +40,17 @@ export async function getRedisClient(): Promise<Redis> {
     cached.promise = new Promise((resolve, reject) => {
       const client = new Redis(process.env.REDIS_URL as string, {
         maxRetriesPerRequest: 3,
-        lazyConnect: true, // Don't connect immediately
+        enableReadyCheck: false,
+        enableOfflineQueue: false,
+        lazyConnect: true,
+        // TLS configuration for Upstash
+        tls: process.env.REDIS_URL?.startsWith('rediss://') ? {
+          rejectUnauthorized: false, // Upstash uses self-signed certs
+        } : undefined,
+        // Keep connection alive
+        keepAlive: 30000,
+        connectTimeout: 10000,
+        family: 4, // Force IPv4
       });
 
       client.on('connect', () => {
@@ -49,11 +59,15 @@ export async function getRedisClient(): Promise<Redis> {
 
       client.on('error', (err) => {
         console.error('❌ Redis error:', err.message);
-        reject(err);
+        // Don't reject on every error, let ioredis handle reconnection
       });
 
       client.on('ready', () => {
         resolve(client);
+      });
+
+      client.on('close', () => {
+        console.warn('⚠️ Redis connection closed');
       });
 
       // Manually connect
