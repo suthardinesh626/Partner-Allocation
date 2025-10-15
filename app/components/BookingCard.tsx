@@ -23,8 +23,6 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
     setSuccess(null);
 
     try {
-      console.log('🚀 Assigning partner for booking:', booking._id?.toString());
-      
       const response = await fetch('/api/bookings/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,10 +32,7 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
         }),
       });
 
-      console.log('📡 Assign response status:', response.status);
-      
       const data = await response.json();
-      console.log('📦 Assign response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to assign partner');
@@ -46,8 +41,8 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
       setSuccess(`Partner assigned: ${data.data.partnerName} (${Math.round(data.data.distance)}m away)`);
       onRefresh?.();
     } catch (err: any) {
-      console.error('❌ Error assigning partner:', err);
-      setError(err.message || 'Network error - check browser console (F12)');
+      console.error('Error assigning partner:', err);
+      setError(err.message || 'Failed to assign partner');
     } finally {
       setIsAssigning(false);
     }
@@ -57,8 +52,6 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
     setError(null);
     setSuccess(null);
     try {
-      console.log('📝 Reviewing document:', documentType, 'Status:', status);
-      
       const response = await fetch('/api/bookings/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,10 +64,7 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
         }),
       });
 
-      console.log('📡 Review response status:', response.status);
-      
       const data = await response.json();
-      console.log('📦 Review response data:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to review document');
@@ -83,8 +73,8 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
       setSuccess(`Document ${documentType} ${status}`);
       onRefresh?.();
     } catch (err: any) {
-      console.error('❌ Error reviewing document:', err);
-      setError(err.message || 'Network error - check browser console (F12)');
+      console.error('Error reviewing document:', err);
+      setError(err.message || 'Failed to review document');
     }
   };
 
@@ -94,8 +84,6 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
     setSuccess(null);
 
     try {
-      console.log('✅ Confirming booking:', booking._id?.toString());
-      
       const response = await fetch('/api/bookings/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,10 +93,7 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
         }),
       });
 
-      console.log('📡 Confirm response status:', response.status);
-      
       const data = await response.json();
-      console.log('📦 Confirm response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to confirm booking');
@@ -117,8 +102,8 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
       setSuccess('Booking confirmed successfully!');
       onRefresh?.();
     } catch (err: any) {
-      console.error('❌ Error confirming booking:', err);
-      setError(err.message || 'Network error - check browser console (F12)');
+      console.error('Error confirming booking:', err);
+      setError(err.message || 'Failed to confirm booking');
     } finally {
       setIsConfirming(false);
     }
