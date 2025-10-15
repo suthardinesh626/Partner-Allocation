@@ -12,11 +12,10 @@ export async function rateLimit(
   limit: number,
   windowSeconds: number
 ): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
-  const redis = await getRedisClient();
-  const now = Date.now();
-  const windowStart = now - windowSeconds * 1000;
-
   try {
+    const redis = await getRedisClient();
+    const now = Date.now();
+    const windowStart = now - windowSeconds * 1000;
     // Use a Redis pipeline for atomic operations
     const pipeline = redis.pipeline();
     
@@ -51,7 +50,7 @@ export async function rateLimit(
       resetIn,
     };
   } catch (error) {
-    console.error('Rate limit error:', error);
+    console.warn('⚠️ Redis unavailable for rate limiting. Allowing request.');
     // Fail open - allow the request if rate limiting fails
     return {
       allowed: true,
@@ -73,11 +72,10 @@ export async function getRateLimitStatus(
   limit: number,
   windowSeconds: number
 ): Promise<{ count: number; remaining: number; resetIn: number }> {
-  const redis = await getRedisClient();
-  const now = Date.now();
-  const windowStart = now - windowSeconds * 1000;
-
   try {
+    const redis = await getRedisClient();
+    const now = Date.now();
+    const windowStart = now - windowSeconds * 1000;
     const count = await redis.zcount(key, windowStart, now);
     const remaining = Math.max(0, limit - count);
     const ttl = await redis.ttl(key);
@@ -89,7 +87,7 @@ export async function getRateLimitStatus(
       resetIn,
     };
   } catch (error) {
-    console.error('Get rate limit status error:', error);
+    console.warn('⚠️ Redis unavailable for getting rate limit status.');
     return {
       count: 0,
       remaining: limit,
