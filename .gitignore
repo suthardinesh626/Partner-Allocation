@@ -51,3 +51,4 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+FOLDER_STRUCTURE_EXPLAINED.md

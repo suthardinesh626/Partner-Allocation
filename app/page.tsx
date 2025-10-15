@@ -11,6 +11,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'bookings' | 'partners'>('bookings');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [partnerFilter, setPartnerFilter] = useState<'all' | 'online' | 'offline' | 'busy'>('all');
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -51,13 +52,21 @@ export default function Home() {
     setIsLoading(false);
   }, [fetchBookings, fetchPartners]);
 
+  // Filter partners by status
+  const filteredPartners = partners.filter(partner => {
+    if (partnerFilter === 'all') return true;
+    return partner.status === partnerFilter;
+  });
+
+  // Sort partners by priority: online > busy > offline
+  const sortedPartners = [...filteredPartners].sort((a, b) => {
+    const priority = { online: 1, busy: 2, offline: 3 };
+    return priority[a.status as keyof typeof priority] - priority[b.status as keyof typeof priority];
+  });
+
   useEffect(() => {
+    // Fetch data only on initial mount
     fetchData();
-
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000);
-
-    return () => clearInterval(interval);
   }, [fetchData]);
 
   return (
@@ -141,21 +150,44 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {partners.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-gray-500">No partners found</p>
-                  </div>
-                ) : (
-                  partners.map((partner) => (
-                    <PartnerCard
-                      key={partner._id?.toString()}
-                      partner={partner}
-                      onRefresh={fetchData}
-                    />
-                  ))
-                )}
-              </div>
+              <>
+                {/* Partner Filter */}
+                <div className="mb-6 flex items-center gap-4">
+                  <label htmlFor="partner-filter" className="text-sm font-medium text-gray-700">
+                    Filter by Status:
+                  </label>
+                  <select
+                    id="partner-filter"
+                    value={partnerFilter}
+                    onChange={(e) => setPartnerFilter(e.target.value as 'all' | 'online' | 'offline' | 'busy')}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="all">All Partners ({partners.length})</option>
+                    <option value="online">Online ({partners.filter(p => p.status === 'online').length})</option>
+                    <option value="busy">Busy ({partners.filter(p => p.status === 'busy').length})</option>
+                    <option value="offline">Offline ({partners.filter(p => p.status === 'offline').length})</option>
+                  </select>
+                  <span className="text-sm text-gray-500">
+                    Showing {sortedPartners.length} partner{sortedPartners.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedPartners.length === 0 ? (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500">No partners found with {partnerFilter} status</p>
+                    </div>
+                  ) : (
+                    sortedPartners.map((partner) => (
+                      <PartnerCard
+                        key={partner._id?.toString()}
+                        partner={partner}
+                        onRefresh={fetchData}
+                      />
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </>
         )}

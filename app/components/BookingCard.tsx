@@ -169,9 +169,7 @@ export default function BookingCard({ booking, onRefresh }: BookingCardProps) {
                   {doc.status}
                 </span>
               </div>
-              {doc.status === DocumentStatus.PENDING && 
-               (booking.status === BookingStatus.PARTNER_ASSIGNED || 
-                booking.status === BookingStatus.DOCUMENTS_UNDER_REVIEW) && (
+              {doc.status === DocumentStatus.PENDING && (
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleReviewDocument(doc.type, DocumentStatus.APPROVED)}

@@ -78,13 +78,13 @@ export async function POST(request: NextRequest) {
           throw new Error('Booking not found');
         }
 
-        // Check if booking can be reviewed
+        // Check if booking is not already confirmed or cancelled
         if (
-          booking.status !== BookingStatus.PARTNER_ASSIGNED &&
-          booking.status !== BookingStatus.DOCUMENTS_UNDER_REVIEW
+          booking.status === BookingStatus.CONFIRMED ||
+          booking.status === BookingStatus.CANCELLED
         ) {
           throw new Error(
-            `Booking is in ${booking.status} state. Cannot review documents.`
+            `Booking is already ${booking.status}. Cannot review documents.`
           );
         }
 
