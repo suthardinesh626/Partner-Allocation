@@ -7,14 +7,21 @@ interface PartnerCardProps {
   partner: Partner;
   onRefresh?: () => void;
   onNavigateToBooking?: (bookingId: string) => void;
+  onCardClick?: (partnerId: string) => void;
   isHighlighted?: boolean;
   setRef?: (el: HTMLDivElement | null) => void;
 }
 
-export default function PartnerCard({ partner, onRefresh, onNavigateToBooking, isHighlighted, setRef }: PartnerCardProps) {
+export default function PartnerCard({ partner, onRefresh, onNavigateToBooking, onCardClick, isHighlighted, setRef }: PartnerCardProps) {
   const [isSendingGPS, setIsSendingGPS] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const handleCardClick = () => {
+    if (onCardClick && partner._id) {
+      onCardClick(partner._id.toString());
+    }
+  };
 
   const handleSendGPSUpdate = async () => {
     setIsSendingGPS(true);
@@ -66,7 +73,8 @@ export default function PartnerCard({ partner, onRefresh, onNavigateToBooking, i
   return (
     <div 
       ref={setRef}
-      className={`bg-white rounded-lg shadow-md border p-6 transition-all duration-500 ${
+      onClick={handleCardClick}
+      className={`bg-white rounded-lg shadow-md border p-6 transition-all duration-500 cursor-pointer hover:shadow-lg ${
         isHighlighted ? 'border-indigo-500 border-4 shadow-xl ring-4 ring-indigo-200' : 'border-gray-200'
       }`}
     >

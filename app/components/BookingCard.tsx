@@ -7,15 +7,22 @@ interface BookingCardProps {
   booking: Booking;
   onRefresh?: () => void;
   onNavigateToPartner?: (partnerId: string) => void;
+  onCardClick?: (bookingId: string) => void;
   isHighlighted?: boolean;
   setRef?: (el: HTMLDivElement | null) => void;
 }
 
-export default function BookingCard({ booking, onRefresh, onNavigateToPartner, isHighlighted, setRef }: BookingCardProps) {
+export default function BookingCard({ booking, onRefresh, onNavigateToPartner, onCardClick, isHighlighted, setRef }: BookingCardProps) {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const handleCardClick = () => {
+    if (onCardClick && booking._id) {
+      onCardClick(booking._id.toString());
+    }
+  };
 
   const handleAssignPartner = async () => {
     setIsAssigning(true);
@@ -134,7 +141,8 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, i
   return (
     <div 
       ref={setRef}
-      className={`bg-white rounded-lg shadow-md border p-6 mb-4 transition-all duration-500 ${
+      onClick={handleCardClick}
+      className={`bg-white rounded-lg shadow-md border p-6 mb-4 transition-all duration-500 cursor-pointer hover:shadow-lg ${
         isHighlighted ? 'border-indigo-500 border-4 shadow-xl ring-4 ring-indigo-200' : 'border-gray-200'
       }`}
     >

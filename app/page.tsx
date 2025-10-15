@@ -5,6 +5,44 @@ import BookingCard from './components/BookingCard';
 import PartnerCard from './components/PartnerCard';
 import { Booking, Partner } from '@/lib/types';
 
+// Utility functions for localStorage
+const LAST_CLICKED_KEY = 'last_clicked_card';
+
+interface LastClickedCard {
+  id: string;
+  type: 'booking' | 'partner';
+  timestamp: number;
+}
+
+const saveLastClickedCard = (id: string, type: 'booking' | 'partner') => {
+  const data: LastClickedCard = {
+    id,
+    type,
+    timestamp: Date.now()
+  };
+  localStorage.setItem(LAST_CLICKED_KEY, JSON.stringify(data));
+};
+
+const getLastClickedCard = (): LastClickedCard | null => {
+  try {
+    const stored = localStorage.getItem(LAST_CLICKED_KEY);
+    if (!stored) return null;
+    
+    const data = JSON.parse(stored) as LastClickedCard;
+    // Only consider cards clicked within the last 30 minutes
+    const thirtyMinutes = 30 * 60 * 1000;
+    if (Date.now() - data.timestamp > thirtyMinutes) {
+      localStorage.removeItem(LAST_CLICKED_KEY);
+      return null;
+    }
+    
+    return data;
+  } catch {
+    localStorage.removeItem(LAST_CLICKED_KEY);
+    return null;
+  }
+};
+
 export default function Home() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -17,6 +55,7 @@ export default function Home() {
   
   const bookingRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const partnerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [hasRestoredLastClicked, setHasRestoredLastClicked] = useState(false);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -123,10 +162,58 @@ export default function Home() {
     }, 100);
   }, []);
 
+  // Handle card clicks to save last clicked card
+  const handleBookingCardClick = useCallback((bookingId: string) => {
+    saveLastClickedCard(bookingId, 'booking');
+    setHighlightedId(bookingId);
+    setTimeout(() => setHighlightedId(null), 3000);
+  }, []);
+
+  const handlePartnerCardClick = useCallback((partnerId: string) => {
+    saveLastClickedCard(partnerId, 'partner');
+    setHighlightedId(partnerId);
+    setTimeout(() => setHighlightedId(null), 3000);
+  }, []);
+
+  // Restore and scroll to last clicked card
+  const restoreLastClickedCard = useCallback(() => {
+    if (hasRestoredLastClicked) return;
+    
+    const lastClicked = getLastClickedCard();
+    if (!lastClicked) return;
+
+    const { id, type } = lastClicked;
+
+    // Set the appropriate tab
+    setActiveTab(type === 'booking' ? 'bookings' : 'partners');
+    setHighlightedId(id);
+
+    // Wait for tab change and cards to render
+    setTimeout(() => {
+      const refs = type === 'booking' ? bookingRefs : partnerRefs;
+      const element = refs.current.get(id);
+      
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Keep highlight for 5 seconds for restored cards
+        setTimeout(() => setHighlightedId(null), 5000);
+      }
+      
+      setHasRestoredLastClicked(true);
+    }, 200);
+  }, [hasRestoredLastClicked]);
+
   useEffect(() => {
     // Fetch data only on initial mount
     fetchData();
   }, [fetchData]);
+
+  // Restore last clicked card after data is loaded
+  useEffect(() => {
+    if (!isLoading && (bookings.length > 0 || partners.length > 0)) {
+      restoreLastClickedCard();
+    }
+  }, [isLoading, bookings.length, partners.length, restoreLastClickedCard]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -228,6 +315,7 @@ export default function Home() {
                         booking={booking}
                         onRefresh={fetchData}
                         onNavigateToPartner={navigateToPartner}
+                        onCardClick={handleBookingCardClick}
                         isHighlighted={highlightedId === booking._id?.toString()}
                         setRef={(el) => {
                           if (el && booking._id) {
@@ -274,6 +362,7 @@ export default function Home() {
                         partner={partner}
                         onRefresh={fetchData}
                         onNavigateToBooking={navigateToBooking}
+                        onCardClick={handlePartnerCardClick}
                         isHighlighted={highlightedId === partner._id?.toString()}
                         setRef={(el) => {
                           if (el && partner._id) {
