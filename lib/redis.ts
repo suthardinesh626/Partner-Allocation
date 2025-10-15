@@ -1,12 +1,15 @@
 import Redis from 'ioredis';
 
-if (!process.env.REDIS_URL) {
+const hasRedisUrl = !!process.env.REDIS_URL;
+
+if (!hasRedisUrl) {
   console.warn('⚠️ REDIS_URL not defined. Redis features (locking, rate limiting, pub/sub) will be disabled.');
 }
 
 interface RedisClientCached {
   client: Redis | null;
   promise: Promise<Redis> | null;
+  failed: boolean; // Track if connection failed
 }
 
 // Use global variable to preserve connection across hot reloads in development
@@ -18,6 +21,7 @@ declare global {
 let cached: RedisClientCached = global._redisClientPromise || {
   client: null,
   promise: null,
+  failed: !hasRedisUrl, // Mark as failed if no REDIS_URL
 };
 
 if (!global._redisClientPromise) {
@@ -32,6 +36,11 @@ export async function getRedisClient(): Promise<Redis> {
     throw new Error('Redis URL not configured');
   }
 
+  // If previously failed, fail fast without retry
+  if (cached.failed) {
+    throw new Error('Redis previously failed to connect');
+  }
+
   if (cached.client) {
     return cached.client;
   }
@@ -39,15 +48,14 @@ export async function getRedisClient(): Promise<Redis> {
   if (!cached.promise) {
     cached.promise = new Promise((resolve, reject) => {
       const client = new Redis(process.env.REDIS_URL as string, {
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: 1, // Reduced from 3 to 1
+        connectTimeout: 2000, // 2 second connection timeout
         retryStrategy: (times) => {
-          // Retry up to 3 times, then give up
-          if (times > 3) {
-            console.warn('⚠️ Redis connection failed after 3 retries. Some features may not work.');
+          // Only retry once
+          if (times > 1) {
             return null; // Stop retrying
           }
-          const delay = Math.min(times * 50, 2000);
-          return delay;
+          return 100; // Quick retry
         },
         reconnectOnError: (err) => {
           const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
@@ -63,20 +71,21 @@ export async function getRedisClient(): Promise<Redis> {
       });
 
       client.on('error', (err) => {
-        console.error('❌ Redis error:', err);
-        // Don't reject immediately on error - let retry logic handle it
+        console.error('❌ Redis error:', err.message);
       });
 
       client.on('ready', () => {
+        cached.failed = false;
         resolve(client);
       });
 
-      // Timeout for initial connection
+      // Reduced timeout from 10s to 2s
       setTimeout(() => {
         if (!cached.client) {
-          reject(new Error('Redis connection timeout after 10 seconds'));
+          cached.failed = true; // Mark as failed
+          reject(new Error('Redis connection timeout after 2 seconds'));
         }
-      }, 10000);
+      }, 2000);
     });
   }
 
@@ -85,7 +94,8 @@ export async function getRedisClient(): Promise<Redis> {
     return cached.client;
   } catch (error) {
     cached.promise = null;
-    console.warn('⚠️ Redis unavailable. Continuing without Redis (rate limiting & pub/sub disabled)');
+    cached.failed = true; // Mark as failed to prevent future attempts
+    console.warn('⚠️ Redis unavailable. Continuing without Redis.');
     throw error;
   }
 }
