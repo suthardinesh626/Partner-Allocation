@@ -6,9 +6,12 @@ import { Booking, DocumentStatus, BookingStatus } from '@/lib/types';
 interface BookingCardProps {
   booking: Booking;
   onRefresh?: () => void;
+  onNavigateToPartner?: (partnerId: string) => void;
+  isHighlighted?: boolean;
+  setRef?: (el: HTMLDivElement | null) => void;
 }
 
-export default function BookingCard({ booking, onRefresh }: BookingCardProps) {
+export default function BookingCard({ booking, onRefresh, onNavigateToPartner, isHighlighted, setRef }: BookingCardProps) {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +129,12 @@ export default function BookingCard({ booking, onRefresh }: BookingCardProps) {
     allDocumentsApproved;
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-4">
+    <div 
+      ref={setRef}
+      className={`bg-white rounded-lg shadow-md border p-6 mb-4 transition-all duration-500 ${
+        isHighlighted ? 'border-indigo-500 border-4 shadow-xl ring-4 ring-indigo-200' : 'border-gray-200'
+      }`}
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
@@ -196,15 +204,20 @@ export default function BookingCard({ booking, onRefresh }: BookingCardProps) {
       </div>
 
       {booking.partnerId && (
-        <div className="mb-4 p-3 bg-blue-50 rounded">
-          <p className="text-sm text-blue-800">
-            <span className="font-semibold">Partner ID:</span> {booking.partnerId}
-          </p>
+        <div className="mb-4">
+          <button
+            onClick={() => onNavigateToPartner?.(booking.partnerId!)}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center gap-2"
+          >
+            <span>Go to Partner</span>
+          </button>
         </div>
       )}
 
       <div className="flex space-x-3">
-        {booking.status === BookingStatus.PENDING && (
+        {(booking.status === BookingStatus.PENDING || 
+          booking.status === BookingStatus.DOCUMENTS_UNDER_REVIEW) && 
+         !booking.partnerId && (
           <button
             onClick={handleAssignPartner}
             disabled={isAssigning}

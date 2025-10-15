@@ -60,10 +60,18 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if booking is already assigned
-        if (booking.status !== BookingStatus.PENDING) {
+        if (
+          booking.status !== BookingStatus.PENDING &&
+          booking.status !== BookingStatus.DOCUMENTS_UNDER_REVIEW
+        ) {
           throw new Error(
             `Booking is already in ${booking.status} state. Cannot assign partner.`
           );
+        }
+
+        // Check if partner already assigned
+        if (booking.partnerId) {
+          throw new Error('Partner is already assigned to this booking.');
         }
 
         // Find nearest available partner using geospatial query

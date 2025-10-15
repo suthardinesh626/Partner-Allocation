@@ -6,9 +6,12 @@ import { Partner, PartnerStatus } from '@/lib/types';
 interface PartnerCardProps {
   partner: Partner;
   onRefresh?: () => void;
+  onNavigateToBooking?: (bookingId: string) => void;
+  isHighlighted?: boolean;
+  setRef?: (el: HTMLDivElement | null) => void;
 }
 
-export default function PartnerCard({ partner, onRefresh }: PartnerCardProps) {
+export default function PartnerCard({ partner, onRefresh, onNavigateToBooking, isHighlighted, setRef }: PartnerCardProps) {
   const [isSendingGPS, setIsSendingGPS] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -61,7 +64,12 @@ export default function PartnerCard({ partner, onRefresh }: PartnerCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+    <div 
+      ref={setRef}
+      className={`bg-white rounded-lg shadow-md border p-6 transition-all duration-500 ${
+        isHighlighted ? 'border-indigo-500 border-4 shadow-xl ring-4 ring-indigo-200' : 'border-gray-200'
+      }`}
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{partner.name}</h3>
@@ -106,10 +114,13 @@ export default function PartnerCard({ partner, onRefresh }: PartnerCardProps) {
       </div>
 
       {partner.currentBookingId && (
-        <div className="mb-4 p-3 bg-blue-50 rounded">
-          <p className="text-sm text-blue-800">
-            <span className="font-semibold">Active Booking:</span> {partner.currentBookingId}
-          </p>
+        <div className="mb-4">
+          <button
+            onClick={() => onNavigateToBooking?.(partner.currentBookingId!)}
+            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center gap-2"
+          >
+            <span>Go to Booking</span>
+          </button>
         </div>
       )}
 

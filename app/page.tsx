@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import BookingCard from './components/BookingCard';
 import PartnerCard from './components/PartnerCard';
 import { Booking, Partner } from '@/lib/types';
@@ -12,6 +12,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [partnerFilter, setPartnerFilter] = useState<'all' | 'online' | 'offline' | 'busy'>('all');
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'unassigned' | 'assigned' | 'pending' | 'documents_under_review' | 'partner_assigned' | 'confirmed' | 'cancelled'>('all');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  
+  const bookingRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const partnerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -52,6 +57,32 @@ export default function Home() {
     setIsLoading(false);
   }, [fetchBookings, fetchPartners]);
 
+  // Filter bookings by status or assignment
+  const filteredBookings = bookings.filter(booking => {
+    if (bookingFilter === 'all') return true;
+    if (bookingFilter === 'unassigned') return !booking.partnerId;
+    if (bookingFilter === 'assigned') return !!booking.partnerId;
+    return booking.status === bookingFilter;
+  });
+
+  // Sort bookings: unassigned first, then by status priority
+  const sortedBookings = [...filteredBookings].sort((a, b) => {
+    // First priority: unassigned bookings come first
+    if (!a.partnerId && b.partnerId) return -1;
+    if (a.partnerId && !b.partnerId) return 1;
+    
+    // Second priority: sort by status
+    const statusPriority = { 
+      pending: 1, 
+      documents_under_review: 2, 
+      partner_assigned: 3, 
+      confirmed: 4, 
+      cancelled: 5 
+    };
+    return (statusPriority[a.status as keyof typeof statusPriority] || 999) - 
+           (statusPriority[b.status as keyof typeof statusPriority] || 999);
+  });
+
   // Filter partners by status
   const filteredPartners = partners.filter(partner => {
     if (partnerFilter === 'all') return true;
@@ -63,6 +94,34 @@ export default function Home() {
     const priority = { online: 1, busy: 2, offline: 3 };
     return priority[a.status as keyof typeof priority] - priority[b.status as keyof typeof priority];
   });
+
+  // Navigate to a partner card
+  const navigateToPartner = useCallback((partnerId: string) => {
+    setActiveTab('partners');
+    setHighlightedId(partnerId);
+    setTimeout(() => {
+      const element = partnerRefs.current.get(partnerId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Remove highlight after 3 seconds
+        setTimeout(() => setHighlightedId(null), 3000);
+      }
+    }, 100);
+  }, []);
+
+  // Navigate to a booking card
+  const navigateToBooking = useCallback((bookingId: string) => {
+    setActiveTab('bookings');
+    setHighlightedId(bookingId);
+    setTimeout(() => {
+      const element = bookingRefs.current.get(bookingId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Remove highlight after 3 seconds
+        setTimeout(() => setHighlightedId(null), 3000);
+      }
+    }, 100);
+  }, []);
 
   useEffect(() => {
     // Fetch data only on initial mount
@@ -134,33 +193,64 @@ export default function Home() {
         ) : (
           <>
             {activeTab === 'bookings' ? (
-              <div className="space-y-4">
-                {bookings.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">No bookings found</p>
-                  </div>
-                ) : (
-                  bookings.map((booking) => (
-                    <BookingCard
-                      key={booking._id?.toString()}
-                      booking={booking}
-                      onRefresh={fetchData}
-                    />
-                  ))
-                )}
-              </div>
+              <>
+                {/* Booking Filter */}
+                <div className="mb-6 flex items-center gap-4">
+                  <label htmlFor="booking-filter" className="text-sm font-bold text-gray-700">
+                    Filter by:
+                  </label>
+                  <select
+                    id="booking-filter"
+                    value={bookingFilter}
+                    onChange={(e) => setBookingFilter(e.target.value as typeof bookingFilter)}
+                    className="px-4 py-2 border-2 border-gray-500 font-medium text-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="all">All Bookings ({bookings.length})</option>
+                    <option value="pending">Pending ({bookings.filter(b => b.status === 'pending').length})</option>
+                    <option value="documents_under_review">Under Review ({bookings.filter(b => b.status === 'documents_under_review').length})</option>
+                    <option value="partner_assigned">Partner Assigned ({bookings.filter(b => b.status === 'partner_assigned').length})</option>
+                    <option value="confirmed">Confirmed ({bookings.filter(b => b.status === 'confirmed').length})</option>
+                  </select>
+                  <span className="text-sm text-gray-500">
+                    Showing {sortedBookings.length} booking{sortedBookings.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {sortedBookings.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500">No bookings found matching the filter</p>
+                    </div>
+                  ) : (
+                    sortedBookings.map((booking) => (
+                      <BookingCard
+                        key={booking._id?.toString()}
+                        booking={booking}
+                        onRefresh={fetchData}
+                        onNavigateToPartner={navigateToPartner}
+                        isHighlighted={highlightedId === booking._id?.toString()}
+                        setRef={(el) => {
+                          if (el && booking._id) {
+                            bookingRefs.current.set(booking._id.toString(), el);
+                          }
+                        }}
+                      />
+                    ))
+                  )}
+                </div>
+              </>
             ) : (
               <>
                 {/* Partner Filter */}
                 <div className="mb-6 flex items-center gap-4">
-                  <label htmlFor="partner-filter" className="text-sm font-medium text-gray-700">
+                  <label htmlFor="partner-filter" className="text-sm font-bold text-gray-700">
                     Filter by Status:
                   </label>
                   <select
                     id="partner-filter"
                     value={partnerFilter}
                     onChange={(e) => setPartnerFilter(e.target.value as 'all' | 'online' | 'offline' | 'busy')}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="px-4 py-2 border-2 border-gray-500 font-medium text-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="all">All Partners ({partners.length})</option>
                     <option value="online">Online ({partners.filter(p => p.status === 'online').length})</option>
@@ -183,6 +273,13 @@ export default function Home() {
                         key={partner._id?.toString()}
                         partner={partner}
                         onRefresh={fetchData}
+                        onNavigateToBooking={navigateToBooking}
+                        isHighlighted={highlightedId === partner._id?.toString()}
+                        setRef={(el) => {
+                          if (el && partner._id) {
+                            partnerRefs.current.set(partner._id.toString(), el);
+                          }
+                        }}
                       />
                     ))
                   )}
