@@ -1,7 +1,7 @@
 import Redis from 'ioredis';
 
 if (!process.env.REDIS_URL) {
-  throw new Error('Please define the REDIS_URL environment variable');
+  console.warn('⚠️ REDIS_URL not defined. Redis features (locking, rate limiting, pub/sub) will be disabled.');
 }
 
 interface RedisClientCached {
@@ -28,6 +28,10 @@ if (!global._redisClientPromise) {
  * Get Redis client instance (singleton pattern)
  */
 export async function getRedisClient(): Promise<Redis> {
+  if (!process.env.REDIS_URL) {
+    throw new Error('Redis URL not configured');
+  }
+
   if (cached.client) {
     return cached.client;
   }
