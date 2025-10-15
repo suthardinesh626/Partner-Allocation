@@ -55,7 +55,7 @@ export default function Home() {
   
   const bookingRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const partnerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [hasRestoredLastClicked, setHasRestoredLastClicked] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -136,28 +136,34 @@ export default function Home() {
 
   // Navigate to a partner card
   const navigateToPartner = useCallback((partnerId: string) => {
+    saveLastClickedCard(partnerId, 'partner');
     setActiveTab('partners');
     setHighlightedId(partnerId);
     setTimeout(() => {
       const element = partnerRefs.current.get(partnerId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Remove highlight after 3 seconds
-        setTimeout(() => setHighlightedId(null), 3000);
+        // Remove highlight after 8 seconds to match click behavior
+        setTimeout(() => {
+          setHighlightedId(current => current === partnerId ? null : current);
+        }, 8000);
       }
     }, 100);
   }, []);
 
   // Navigate to a booking card
   const navigateToBooking = useCallback((bookingId: string) => {
+    saveLastClickedCard(bookingId, 'booking');
     setActiveTab('bookings');
     setHighlightedId(bookingId);
     setTimeout(() => {
       const element = bookingRefs.current.get(bookingId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Remove highlight after 3 seconds
-        setTimeout(() => setHighlightedId(null), 3000);
+        // Remove highlight after 8 seconds to match click behavior
+        setTimeout(() => {
+          setHighlightedId(current => current === bookingId ? null : current);
+        }, 8000);
       }
     }, 100);
   }, []);
@@ -166,42 +172,66 @@ export default function Home() {
   const handleBookingCardClick = useCallback((bookingId: string) => {
     saveLastClickedCard(bookingId, 'booking');
     setHighlightedId(bookingId);
-    setTimeout(() => setHighlightedId(null), 3000);
+    // Extend highlight duration to 8 seconds to account for potential data refreshes
+    setTimeout(() => {
+      // Only clear if this is still the highlighted card
+      setHighlightedId(current => current === bookingId ? null : current);
+    }, 8000);
   }, []);
 
   const handlePartnerCardClick = useCallback((partnerId: string) => {
     saveLastClickedCard(partnerId, 'partner');
     setHighlightedId(partnerId);
-    setTimeout(() => setHighlightedId(null), 3000);
+    // Extend highlight duration to 8 seconds to account for potential data refreshes
+    setTimeout(() => {
+      // Only clear if this is still the highlighted card
+      setHighlightedId(current => current === partnerId ? null : current);
+    }, 8000);
   }, []);
 
   // Restore and scroll to last clicked card
   const restoreLastClickedCard = useCallback(() => {
-    if (hasRestoredLastClicked) return;
-    
-    const lastClicked = getLastClickedCard();
-    if (!lastClicked) return;
-
-    const { id, type } = lastClicked;
-
-    // Set the appropriate tab
-    setActiveTab(type === 'booking' ? 'bookings' : 'partners');
-    setHighlightedId(id);
-
-    // Wait for tab change and cards to render
-    setTimeout(() => {
-      const refs = type === 'booking' ? bookingRefs : partnerRefs;
-      const element = refs.current.get(id);
-      
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Keep highlight for 5 seconds for restored cards
-        setTimeout(() => setHighlightedId(null), 5000);
+    // On initial load, restore from localStorage
+    if (isInitialLoad) {
+      const lastClicked = getLastClickedCard();
+      if (lastClicked) {
+        const { id, type } = lastClicked;
+        setActiveTab(type === 'booking' ? 'bookings' : 'partners');
+        setHighlightedId(id);
+        
+        // Schedule initial scroll and highlight clear
+        setTimeout(() => {
+          const refs = type === 'booking' ? bookingRefs : partnerRefs;
+          const element = refs.current.get(id);
+          
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Clear highlight after 10 seconds for initial restoration
+            setTimeout(() => {
+              setHighlightedId(current => current === id ? null : current);
+            }, 10000);
+          }
+        }, 200);
       }
-      
-      setHasRestoredLastClicked(true);
-    }, 200);
-  }, [hasRestoredLastClicked]);
+      setIsInitialLoad(false);
+      return;
+    }
+
+    // On data refresh, scroll to currently highlighted card if any
+    if (highlightedId) {
+      const lastClicked = getLastClickedCard();
+      if (lastClicked && lastClicked.id === highlightedId) {
+        setTimeout(() => {
+          const refs = lastClicked.type === 'booking' ? bookingRefs : partnerRefs;
+          const element = refs.current.get(highlightedId);
+          
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    }
+  }, [isInitialLoad, highlightedId]);
 
   useEffect(() => {
     // Fetch data only on initial mount
