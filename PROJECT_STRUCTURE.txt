@@ -64,7 +64,7 @@ partner-allocation-app/
 
 Total Files:        23 (TypeScript/Markdown)
 API Endpoints:      6
-React Components:   3 (page.tsx + 2 components)
+React Components:   3 (1 page.tsx + 2 components)
 Library Modules:    6
 Scripts:            4
 Documentation:      6 files
@@ -93,7 +93,6 @@ Documentation:      6 files
 4. REAL-TIME UPDATES
    • Redis pub/sub channels
    • Event broadcasting (booking confirmed, partner assigned, etc.)
-   • Auto-refresh dashboard (10s interval)
 
 5. DATABASE DESIGN
    • Bookings collection with geospatial coordinates
