@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const health = {
-      status: 'ok',
+      status: 'healthy',
       timestamp: new Date().toISOString(),
       env: {
         hasMongoUri: !!process.env.MONGODB_URI,
