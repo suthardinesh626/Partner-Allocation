@@ -99,7 +99,6 @@ export async function POST(
     }
 
     const partnersCollection = await getCollection<Partner>('partners');
-
     // Check if partner exists
     const partner = await partnersCollection.findOne({
       _id: new ObjectId(partnerId),
