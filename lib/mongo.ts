@@ -43,10 +43,11 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
 
   if (!cached.promise) {
     const opts = {
-      maxPoolSize: 10,
-      minPoolSize: 2,
-      maxIdleTimeMS: 30000,
-      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 5, // ✅ Reduce pool size for Vercel
+      minPoolSize: 1, // ✅ Reduce min pool size
+      maxIdleTimeMS: 10000, // ✅ Reduce idle time
+      serverSelectionTimeoutMS: 3000, // ✅ Reduce timeout to 3 seconds
+      connectTimeoutMS: 3000, // ✅ Add connection timeout
       // SSL/TLS options for MongoDB Atlas (required for Vercel)
       tls: true,
       tlsAllowInvalidCertificates: false,

@@ -232,7 +232,8 @@ export default function BookingCard({ booking, onRefresh, onNavigateToPartner, o
           <button
             onClick={handleAssignPartner}
             disabled={isAssigning}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition font-medium"
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition font-medium cursor-pointer
+             "
           >
             {isAssigning ? 'Assigning...' : 'Assign Partner'}
           </button>

@@ -42,15 +42,16 @@ export async function getRedisClient(): Promise<Redis> {
         maxRetriesPerRequest: 3,
         enableReadyCheck: false,
         enableOfflineQueue: false,
-        lazyConnect: true,
+        lazyConnect: false, // ✅ Connect immediately!
         // TLS configuration for Upstash
         tls: process.env.REDIS_URL?.startsWith('rediss://') ? {
           rejectUnauthorized: false, // Upstash uses self-signed certs
         } : undefined,
         // Keep connection alive
         keepAlive: 30000,
-        connectTimeout: 10000,
+        connectTimeout: 5000, // ✅ Reduce to 5 seconds
         family: 4, // Force IPv4
+        retryDelayOnClusterDown: 100,
       });
 
       client.on('connect', () => {
@@ -79,17 +80,29 @@ export async function getRedisClient(): Promise<Redis> {
   return cached.client;
 }
 
+// Redis subscriber cache
+let subscriberCache: Redis | null = null;
+
 /**
- * Create a Redis pub/sub subscriber
+ * Create a Redis pub/sub subscriber (cached)
  */
 export async function createRedisSubscriber(): Promise<Redis> {
-  const subscriber = new Redis(process.env.REDIS_URL as string);
+  if (subscriberCache) {
+    return subscriberCache;
+  }
   
-  subscriber.on('error', (err) => {
+  subscriberCache = new Redis(process.env.REDIS_URL as string, {
+    lazyConnect: false,
+    connectTimeout: 3000,
+    maxRetriesPerRequest: 2,
+  });
+  
+  subscriberCache.on('error', (err) => {
     console.error('❌ Redis subscriber error:', err);
+    subscriberCache = null; // Reset cache on error
   });
 
-  return subscriber;
+  return subscriberCache;
 }
 
 /**

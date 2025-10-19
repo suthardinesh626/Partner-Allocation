@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Get total count
     const total = await partnersCollection.countDocuments(filter);
 
-    return NextResponse.json<ApiResponse>({
+    const response = NextResponse.json<ApiResponse>({
       success: true,
       data: {
         partners,
@@ -45,6 +45,11 @@ export async function GET(request: NextRequest) {
         skip,
       },
     });
+
+    // ✅ Add caching headers for better performance
+    response.headers.set('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
+    
+    return response;
   } catch (error: any) {
     console.error('Error fetching partners:', error);
 
