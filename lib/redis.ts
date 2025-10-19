@@ -51,7 +51,6 @@ export async function getRedisClient(): Promise<Redis> {
         keepAlive: 30000,
         connectTimeout: 5000, // ✅ Reduce to 5 seconds
         family: 4, // Force IPv4
-        retryDelayOnClusterDown: 100,
       });
 
       client.on('connect', () => {
