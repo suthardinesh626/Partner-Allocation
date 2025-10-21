@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Get total count
     const total = await bookingsCollection.countDocuments(filter);
 
-    const response = NextResponse.json<ApiResponse>({
+    return NextResponse.json<ApiResponse>({
       success: true,
       data: {
         bookings,
@@ -45,11 +45,6 @@ export async function GET(request: NextRequest) {
         skip,
       },
     });
-
-    // ✅ Add caching headers for better performance
-    response.headers.set('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
-    
-    return response;
   } catch (error: any) {
     console.error('Error fetching bookings:', error);
 

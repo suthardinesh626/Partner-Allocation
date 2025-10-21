@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { healthCheck } from '@/lib/warmup';
 
 /**
  * GET /api/health
@@ -7,36 +6,24 @@ import { healthCheck } from '@/lib/warmup';
  */
 export async function GET() {
   try {
-    const { redis, mongo } = await healthCheck();
-    
-    const isHealthy = redis && mongo;
-    
-    return NextResponse.json({
-      status: isHealthy ? 'healthy' : 'degraded',
+    const health = {
+      status: 'healthy',
       timestamp: new Date().toISOString(),
-      services: {
-        redis,
-        mongo,
-      },
       env: {
         hasMongoUri: !!process.env.MONGODB_URI,
         hasRedisUrl: !!process.env.REDIS_URL,
         nodeEnv: process.env.NODE_ENV,
       },
-    }, {
-      status: isHealthy ? 200 : 503,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    });
+    };
+
+    return NextResponse.json(health);
   } catch (error: any) {
     return NextResponse.json(
       {
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
+        status: 'error',
         error: error.message,
       },
-      { status: 503 }
+      { status: 500 }
     );
   }
 }

@@ -37,19 +37,24 @@ export async function getRedisClient(): Promise<Redis> {
   }
 
   if (!cached.promise) {
-    cached.promise = new Promise((resolve, reject) => {
+    cached.promise = (async () => {
       const client = new Redis(process.env.REDIS_URL as string, {
         maxRetriesPerRequest: 3,
-        enableReadyCheck: false,
-        enableOfflineQueue: false,
-        lazyConnect: false, // ✅ Connect immediately!
+        enableReadyCheck: true,
+        enableOfflineQueue: true,
         // TLS configuration for Upstash
         tls: process.env.REDIS_URL?.startsWith('rediss://') ? {
           rejectUnauthorized: false, // Upstash uses self-signed certs
         } : undefined,
         // Keep connection alive
         keepAlive: 30000,
-        connectTimeout: 5000, // ✅ Reduce to 5 seconds
+        connectTimeout: 10000,
+        retryStrategy: (times: number) => {
+          if (times > 3) {
+            return null; // Stop retrying after 3 attempts
+          }
+          return Math.min(times * 200, 2000); // Exponential backoff
+        },
         family: 4, // Force IPv4
       });
 
@@ -59,49 +64,49 @@ export async function getRedisClient(): Promise<Redis> {
 
       client.on('error', (err) => {
         console.error('❌ Redis error:', err.message);
-        // Don't reject on every error, let ioredis handle reconnection
-      });
-
-      client.on('ready', () => {
-        resolve(client);
       });
 
       client.on('close', () => {
         console.warn('⚠️ Redis connection closed');
+        // Reset cached values on connection close
+        cached.client = null;
+        cached.promise = null;
       });
 
-      // Manually connect
-      client.connect().catch(reject);
-    });
+      client.on('end', () => {
+        console.warn('⚠️ Redis connection ended');
+        cached.client = null;
+        cached.promise = null;
+      });
+
+      // Wait for connection to be ready
+      await new Promise<void>((resolve, reject) => {
+        client.once('ready', () => resolve());
+        client.once('error', (err) => {
+          cached.promise = null; // Reset on error
+          reject(err);
+        });
+      });
+
+      return client;
+    })();
   }
 
   cached.client = await cached.promise;
   return cached.client;
 }
 
-// Redis subscriber cache
-let subscriberCache: Redis | null = null;
-
 /**
- * Create a Redis pub/sub subscriber (cached)
+ * Create a Redis pub/sub subscriber
  */
 export async function createRedisSubscriber(): Promise<Redis> {
-  if (subscriberCache) {
-    return subscriberCache;
-  }
+  const subscriber = new Redis(process.env.REDIS_URL as string);
   
-  subscriberCache = new Redis(process.env.REDIS_URL as string, {
-    lazyConnect: false,
-    connectTimeout: 3000,
-    maxRetriesPerRequest: 2,
-  });
-  
-  subscriberCache.on('error', (err) => {
+  subscriber.on('error', (err) => {
     console.error('❌ Redis subscriber error:', err);
-    subscriberCache = null; // Reset cache on error
   });
 
-  return subscriberCache;
+  return subscriber;
 }
 
 /**
